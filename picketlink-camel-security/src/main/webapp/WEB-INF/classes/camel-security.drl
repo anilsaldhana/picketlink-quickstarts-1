@@ -1,0 +1,29 @@
+package org.picketlink.integration.fuse.camel.cdi
+
+dialect 'mvel'
+
+
+import org.picketlink.integration.fuse.camel.authorization.PermissionCheck;
+import org.apache.camel.Message;
+
+rule MessageAuthorizationRuleManagers
+  no-loop
+  activation-group "permissions"
+when
+  check: PermissionCheck(hasRole('manager') == true, operation == "process", granted == false)
+then
+  // Person with role manager can name the child without restriction
+  check.grant();
+end
+
+
+rule MessageAuthorizationRuleSales
+  no-loop
+  activation-group "permissions"
+when
+  camelMessage:Message(getHeader('childname') =='Sally')
+  check: PermissionCheck(hasRole('sales') == true, operation == "process", granted == false)
+then
+  // Person with role sales can name the child Sally
+  check.grant();
+end
